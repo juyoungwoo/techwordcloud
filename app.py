@@ -81,17 +81,18 @@ if uploaded_file:
 
     for word, tag in tokens:
         if tag == 'Noun' and is_valid(word):
-            current_phrase.append(word)
+        c    urrent_phrase.append(word)
         else:
             if len(current_phrase) >= 2:
-                # 수정된 부분: 명사구 안에 제거할 단어가 있으면 추가하지 않음
-                if not any(w in custom_stopwords for w in current_phrase):
-                    phrases.append(' '.join(current_phrase))
+                phrases.append(' '.join(current_phrase))
             current_phrase = []
     if len(current_phrase) >= 2:
-        if not any(w in custom_stopwords for w in current_phrase):
-            phrases.append(' '.join(current_phrase))
-
+        phrases.append(' '.join(current_phrase))
+    
+    # --- 여기 수정!!
+    # 명사구 전체를 custom_stopwords와 비교해서 제거
+    phrases = [p for p in phrases if p not in custom_stopwords]
+    
     # 빈도수 계산
     counter = Counter(phrases)
     filtered_counter = {k: v for k, v in counter.items() if v >= 6}
