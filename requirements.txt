@@ -1,0 +1,7 @@
+streamlit
+pandas
+openpyxl
+konlpy
+jpype1
+wordcloud
+matplotlib
