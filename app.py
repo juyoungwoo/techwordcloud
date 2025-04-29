@@ -1,47 +1,46 @@
 import streamlit as st
 import pandas as pd
-from konlpy.tag import Okt
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from collections import Counter
+import re
 import io
+from mecab import MeCab
 
-# 기본 설정
-st.set_page_config(page_title="워드클라우드 생성기", layout="wide")
+# Streamlit 기본 설정
+st.set_page_config(page_title="워드클라우드 생성기 (Mecab)", layout="wide")
 
-# 타이틀
-st.title("📄 엑셀 기반 워드클라우드 생성기")
+st.title("📄 Mecab 기반 엑셀 워드클라우드 생성기")
 
 # 파일 업로드
 uploaded_file = st.file_uploader("엑셀 파일을 업로드하세요", type=["xlsx"])
 
 # 제거할 단어 입력
 remove_words_input = st.text_input(
-    "제거할 단어를 입력하세요 (여러개 입력할 때는 쉼표로 구분)", ""
+    "제거할 단어를 입력하세요 (쉼표로 여러 개 입력 가능)", ""
 )
 
-# 버튼 누를 때까지 기다리기
 if uploaded_file:
-    # 폰트 경로 설정
+    # 폰트 설정
     try:
-        font_path = './NanumGothic-Bold.ttf'  # 같은 폴더에 있을 경우
+        font_path = './NanumGothic-Bold.ttf'
         fontprop = fm.FontProperties(fname=font_path)
         font_name = fontprop.get_name()
     except:
         st.warning("NanumGothic 폰트를 찾을 수 없습니다. 기본 폰트를 사용합니다.")
         font_name = 'sans-serif'
-    
+
     plt.rcParams['font.family'] = font_name
 
     # 엑셀 읽기
     df = pd.read_excel(uploaded_file)
 
-    # 숫자 열 제거: 모든 값이 숫자이거나 NaN인 열은 제외
+    # 숫자열 제거
     text_columns = []
     for col in df.columns:
         sample = df[col].dropna().astype(str)
-        if not all(sample.str.replace('.', '', 1).str.isnumeric()):  # 숫자 아닌 것이 하나라도 있으면 텍스트 열로 본다
+        if not all(sample.str.replace('.', '', 1).str.isnumeric()):
             text_columns.append(col)
 
     if not text_columns:
@@ -49,13 +48,12 @@ if uploaded_file:
         st.stop()
 
     text_data = df[text_columns].fillna('').apply(lambda row: ' '.join(row), axis=1)
-
-    # 텍스트 합치기
     full_text = " ".join(text_data.tolist())
 
-    # 형태소 분석
-    okt = Okt()
-    tokens = okt.pos(full_text)
+    # Mecab 형태소 분석
+    mecab = MeCab()
+
+    tokens = mecab.pos(full_text)
 
     # 기본 불용어
     basic_stopwords = {'상기', '포함', '발명', '장치', '여기', '주요', '방법', '기초', '정보', '활용', '개선', '효율', '시스템'}
@@ -64,7 +62,7 @@ if uploaded_file:
         '방법 제공', '통해', '대한', '복수', '각각', '구성', '향상', '기존', '통합', '해당', '실시', '다수'
     ]
 
-    # 제거할 추가 단어 처리
+    # 제거할 추가 단어
     custom_stopwords = set(map(str.strip, remove_words_input.split(","))) if remove_words_input else set()
 
     def is_valid(word):
@@ -75,22 +73,11 @@ if uploaded_file:
             not any(stop in word for stop in partial_stopwords)
         )
 
-    # 명사구 추출
-    phrases = []
-    current_phrase = []
-
-    for word, tag in tokens:
-        if tag == 'Noun' and is_valid(word):
-            current_phrase.append(word)
-        else:
-            if len(current_phrase) >= 2:
-                phrases.append(' '.join(current_phrase))
-            current_phrase = []
-    if len(current_phrase) >= 2:
-        phrases.append(' '.join(current_phrase))
+    # 명사만 추출
+    nouns = [word for word, pos in tokens if pos.startswith('N') and is_valid(word)]
 
     # 빈도수 계산
-    counter = Counter(phrases)
+    counter = Counter(nouns)
     filtered_counter = {k: v for k, v in counter.items() if v >= 6}
 
     # 워드클라우드 생성
