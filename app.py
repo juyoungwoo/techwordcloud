@@ -117,7 +117,7 @@ if uploaded_file:
         relative_scaling=0.3,
         scale=2,
         margin=3,
-        colormap='Paired'
+        colormap='tab20'
     ).generate_from_frequencies(filtered_counter)
 
     # 워드클라우드 출력
