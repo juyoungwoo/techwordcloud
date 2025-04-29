@@ -21,6 +21,13 @@ remove_words_input = st.text_input(
     "생성된 워드클라우드에서 추가적으로 제거할 단어를 입력하세요 (여러개 입력할 때는 쉼표로 구분)", ""
 )
 
+# 표시할 Top N 단어 선택
+top_n = st.selectbox(
+    "워드클라우드에 표시할 단어 수 (Top N)", 
+    options=[30, 50, 100, 200], 
+    index=2  # 기본값은 Top 100
+)
+
 # 파일 업로드가 완료되었을 때 실행
 if uploaded_file:
     # 폰트 경로 설정
@@ -65,7 +72,7 @@ if uploaded_file:
         '방법 제공', '통해', '대한', '복수', '각각', '구성', '향상', '기존', '통합', '해당', '실시', '다수'
     ]
 
-    # 입력한 제거 단어 처리 (띄어쓰기 포함 허용)
+    # 입력한 제거 단어 처리
     custom_stopwords = set(map(str.strip, remove_words_input.split(","))) if remove_words_input else set()
 
     # 단어 유효성 검사 함수
@@ -93,9 +100,12 @@ if uploaded_file:
     # 명사구 전체 기준으로 제거 단어 걸러내기
     phrases = [p for p in phrases if p not in custom_stopwords]
 
-    # 빈도수 계산
+    # 명사구 빈도수 카운트
     counter = Counter(phrases)
-    filtered_counter = {k: v for k, v in counter.items() if v >= 6}
+
+    # 상위 Top N개만 추출
+    sorted_phrases = counter.most_common(top_n)
+    filtered_counter = dict(sorted_phrases)
 
     # 워드클라우드 생성
     wordcloud = WordCloud(
