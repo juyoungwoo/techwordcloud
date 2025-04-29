@@ -11,14 +11,14 @@ import io
 st.set_page_config(page_title="워드클라우드 생성기", layout="wide")
 
 # 타이틀
-st.title("📄 엑셀 기반 워드클라우드 생성기")
+st.title("📄 특허 정보 기반 워드클라우드 생성기")
 
 # 파일 업로드
-uploaded_file = st.file_uploader("엑셀 파일을 업로드하세요", type=["xlsx"])
+uploaded_file = st.file_uploader("특허 정보가 기재된 엑셀 파일을 업로드하세요(예, 특허명, 특허명세서, 특허 요약 등)", type=["xlsx"])
 
 # 제거할 단어 입력
 remove_words_input = st.text_input(
-    "제거할 단어를 입력하세요 (여러개 입력할 때는 쉼표로 구분)", ""
+    "생성된 워드클라우드에서 추가적으로 제거할 단어를 입력하세요 (여러개 입력할 때는 쉼표로 구분)", ""
 )
 
 # 버튼 누를 때까지 기다리기
