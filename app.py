@@ -37,11 +37,11 @@ if uploaded_file:
     # 엑셀 읽기
     df = pd.read_excel(uploaded_file)
 
-    # 숫자 열 제거: 모든 값이 숫자이거나 NaN인 열은 제외
+    # 숫자 열 제거
     text_columns = []
     for col in df.columns:
         sample = df[col].dropna().astype(str)
-        if not all(sample.str.replace('.', '', 1).str.isnumeric()):  # 숫자 아닌 것이 하나라도 있으면 텍스트 열로 본다
+        if not all(sample.str.replace('.', '', 1).str.isnumeric()):
             text_columns.append(col)
 
     if not text_columns:
@@ -84,10 +84,13 @@ if uploaded_file:
             current_phrase.append(word)
         else:
             if len(current_phrase) >= 2:
-                phrases.append(' '.join(current_phrase))
+                # 수정된 부분: 명사구 안에 제거할 단어가 있으면 추가하지 않음
+                if not any(w in custom_stopwords for w in current_phrase):
+                    phrases.append(' '.join(current_phrase))
             current_phrase = []
     if len(current_phrase) >= 2:
-        phrases.append(' '.join(current_phrase))
+        if not any(w in custom_stopwords for w in current_phrase):
+            phrases.append(' '.join(current_phrase))
 
     # 빈도수 계산
     counter = Counter(phrases)
